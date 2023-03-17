@@ -62,10 +62,17 @@ impl fmt::Debug for Error {
 enum Repr {
     Simple(ErrorKind),
     Custom(Custom),
+    Other(Other),
 }
 
 #[derive(Debug)]
 struct Custom {
+    kind: ErrorKind,
+    error: &'static str,
+}
+
+#[derive(Debug)]
+struct Other {
     kind: ErrorKind,
     error: &'static str,
 }
@@ -345,6 +352,7 @@ impl Error {
         match self.repr {
             Repr::Simple(..) => None,
             Repr::Custom(ref c) => Some(&c.error),
+            Repr::Other(ref o) => Some(&o.error),
         }
     }
 
@@ -392,6 +400,7 @@ impl Error {
         match self.repr {
             Repr::Simple(..) => None,
             Repr::Custom(c) => Some(c.error),
+            Repr::Other(o) => Some(o.error),
         }
     }
 
@@ -429,6 +438,7 @@ impl Error {
     pub fn kind(&self) -> ErrorKind {
         match self.repr {
             Repr::Custom(ref c) => c.kind,
+            Repr::Other(ref o) => o.kind,
             Repr::Simple(kind) => kind,
         }
     }
@@ -438,6 +448,7 @@ impl fmt::Debug for Repr {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             Repr::Custom(ref c) => fmt::Debug::fmt(&c, fmt),
+            Repr::Other(ref o) => fmt::Debug::fmt(&o, fmt),
             Repr::Simple(kind) => fmt.debug_tuple("Kind").field(&kind).finish(),
         }
     }
@@ -447,6 +458,7 @@ impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.repr {
             Repr::Custom(ref c) => c.error.fmt(fmt),
+            Repr::Other(ref o) => o.error.fmt(fmt),
             Repr::Simple(kind) => write!(fmt, "{}", kind.as_str()),
         }
     }
